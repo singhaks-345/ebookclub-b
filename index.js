@@ -12,17 +12,13 @@ dotenv.config();
 
 const app = express();
 
-// CORS configuration
 const allowedOrigins = [
     "http://localhost:5173",
-    "https://ebookclub-f.vercel.app",
-    
+    "https://ebookclub-f.vercel.app"
 ];
 
 app.use(cors({
     origin: function (origin, callback) {
-        console.log("Request Origin:", origin);
-
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
@@ -36,27 +32,70 @@ app.use(cors({
 
 app.use(express.json());
 
-// MongoDB connection
+// MongoDB connection cache for Vercel
 const URI = process.env.MongoDBURI_Data;
 
-if (!URI) {
-    console.error("MongoDB URI is missing!");
-}
-
-let isConnected = false;
+const cached = globalThis.mongooseCache ||
+    (globalThis.mongooseCache = {
+        promise: null
+    });
 
 async function connectDB() {
-    if (isConnected) return;
+    if (!URI) {
+        throw new Error("MongoDB URI is missing");
+    }
+
+    // Already connected
+    if (mongoose.connection.readyState === 1) {
+        return mongoose.connection;
+    }
+
+    // Connection already in progress
+    if (
+        mongoose.connection.readyState === 2 &&
+        cached.promise
+    ) {
+        return cached.promise;
+    }
+
+    // Create a new connection
+    cached.promise = mongoose.connect(URI, {
+        serverSelectionTimeoutMS: 15000
+    });
 
     try {
-        await mongoose.connect(URI);
-        isConnected = true;
+        await cached.promise;
+
         console.log("MongoDB Connected Successfully");
+
+        return mongoose.connection;
+
     } catch (error) {
-        console.error("MongoDB Connection Error:", error);
+        cached.promise = null;
+
+        console.error(
+            "MongoDB Connection Error:",
+            error.message
+        );
+
         throw error;
     }
 }
+
+// Connect before executing any API route
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (error) {
+        return res.status(503).json({
+            activeStatus: false,
+            error: true,
+            message: "Database connection failed",
+            details: error.message
+        });
+    }
+});
 
 // Routes
 app.use("/book", bookRoute);
@@ -64,23 +103,13 @@ app.use("/user", userRoute);
 app.use("/contect", contactRoute);
 
 // Home route
-app.get("/", async (req, res) => {
-    try {
-        await connectDB();
-
-        res.status(200).json({
-            activeStatus: true,
-            error: false,
-            message: "BookClub Backend is Running"
-        });
-    } catch (error) {
-        res.status(500).json({
-            activeStatus: false,
-            error: true,
-            message: "Database connection failed"
-        });
-    }
+app.get("/", (req, res) => {
+    res.status(200).json({
+        activeStatus: true,
+        error: false,
+        message: "BookClub Backend is Running",
+        database: "Connected"
+    });
 });
 
-// Export Express app for Vercel
 export default app;
