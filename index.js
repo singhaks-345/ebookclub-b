@@ -16,7 +16,7 @@ const app = express();
 const allowedOrigins = [
     "http://localhost:5173",
     "https://ebookclub-f.vercel.app",
-    "https://ebookclub-b.vercel.app"
+    
 ];
 
 app.use(cors({
