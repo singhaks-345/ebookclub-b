@@ -1,0 +1,28 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Books App Backend",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/singhaks-345/BookSales-App.git"
+  },
+  "author": "Akash Singh",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/singhaks-345/BookSales-App/issues"
+  },
+  "homepage": "https://github.com/singhaks-345/BookSales-App#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.10.1",
+    "nodemon": "^3.1.9"
+  }
+}
