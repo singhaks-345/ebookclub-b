@@ -15,8 +15,8 @@ const app = express();
 // CORS configuration
 const allowedOrigins = [
     "http://localhost:5173",
-    "https://akashsinghbookstore.netlify.app",
-    "https://book-sales-app-teal.vercel.app"
+    "https://ebookclub-f.vercel.app",
+    "https://ebookclub-b.vercel.app"
 ];
 
 app.use(cors({
